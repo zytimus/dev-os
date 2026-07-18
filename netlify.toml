@@ -1,0 +1,13 @@
+# Netlify config for the ContractIQ Next.js app.
+# The git repo root is `dev-os`, but the app lives in the `contractiq/` subfolder,
+# so we tell Netlify to build from there.
+[build]
+  base = "contractiq"
+  command = "npm run build"
+  # Relative to `base` above -> contractiq/.next
+  publish = ".next"
+
+# Enables SSR, API routes, and middleware on Netlify.
+# Netlify auto-detects Next.js and installs this, but declaring it is explicit and safe.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
