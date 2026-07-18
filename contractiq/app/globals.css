@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ContractIQ global styles — allNeurons design system (docs/design.md).
+   Semantic tokens are defined in tailwind.config.ts; a few CSS vars remain for
+   inline-style usage in Server Components. */
+
+:root {
+  --brand: #115ACB;
+  --brand-hover: #0044AE;
+  --ink: #070A0E;
+  --muted: #4A4C4F;
+  --surface: #FAFAFA;
+  --subtle: #F0F0F1;
+  --line: #DADADB;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    @apply bg-white text-ink antialiased;
+    font-family: var(--font-inter), 'Inter Display', 'Inter', system-ui, sans-serif;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  /* Consistent, accessible focus ring (Blue 500) */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+}
+
+@layer components {
+  /* Legacy button classes used by the static landing page (Server Component,
+     hover via CSS only). Feature UI uses <Button/> instead. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-button bg-brand px-6 py-3 text-body-lg text-white transition-colors duration-150 ease-out hover:bg-brand-hover;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-button border border-line bg-transparent px-6 py-3 text-body-lg text-ink transition-colors duration-150 ease-out hover:border-brand hover:bg-surface;
+  }
+}
