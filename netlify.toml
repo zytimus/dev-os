@@ -7,6 +7,12 @@
   # Relative to `base` above -> contractiq/.next
   publish = ".next"
 
+[build.environment]
+  # OPENAI_MODEL (e.g. a model name) and APP_URL (a public URL) are not secrets,
+  # but their values get inlined into the build output and trip Netlify's secrets
+  # scanner. Omit only these non-sensitive keys — real secrets stay scanned.
+  SECRETS_SCAN_OMIT_KEYS = "OPENAI_MODEL,APP_URL"
+
 # Enables SSR, API routes, and middleware on Netlify.
 # Netlify auto-detects Next.js and installs this, but declaring it is explicit and safe.
 [[plugins]]
