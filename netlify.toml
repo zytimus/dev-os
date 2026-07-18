@@ -8,10 +8,13 @@
   publish = ".next"
 
 [build.environment]
-  # OPENAI_MODEL (e.g. a model name) and APP_URL (a public URL) are not secrets,
-  # but their values get inlined into the build output and trip Netlify's secrets
-  # scanner. Omit only these non-sensitive keys — real secrets stay scanned.
-  SECRETS_SCAN_OMIT_KEYS = "OPENAI_MODEL,APP_URL"
+  # These keys are NOT secrets but get inlined into the build output, tripping
+  # Netlify's secrets scanner:
+  #   - OPENAI_MODEL / APP_URL: a model name and a public URL.
+  #   - NEXT_PUBLIC_* : Next.js inlines these into the client bundle by design.
+  #     Supabase anon key + URL are public by design (protected by RLS, not secrecy).
+  # Real secrets (OPENAI_API_KEY, SUPABASE_SERVICE_ROLE_KEY) stay scanned.
+  SECRETS_SCAN_OMIT_KEYS = "OPENAI_MODEL,APP_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL"
 
 # Enables SSR, API routes, and middleware on Netlify.
 # Netlify auto-detects Next.js and installs this, but declaring it is explicit and safe.
