@@ -15,6 +15,9 @@
   #     Supabase anon key + URL are public by design (protected by RLS, not secrecy).
   # Real secrets (OPENAI_API_KEY, SUPABASE_SERVICE_ROLE_KEY) stay scanned.
   SECRETS_SCAN_OMIT_KEYS = "OPENAI_MODEL,APP_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL"
+  # The webpack build cache is an internal build artifact (not served to users);
+  # exempt it so cached inlined values don't trip the scanner.
+  SECRETS_SCAN_OMIT_PATHS = ".next/cache/**"
 
 # Enables SSR, API routes, and middleware on Netlify.
 # Netlify auto-detects Next.js and installs this, but declaring it is explicit and safe.
