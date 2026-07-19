@@ -77,9 +77,9 @@ export const POST = handleRoute(async (req, { params }: RouteContext) => {
     sessionId = created.id
   }
 
-  // CRITICAL: load the full conversation history BEFORE saving the new user
-  // message. If we saved first, the classifier would see the current question as
-  // part of history and always misclassify the context. Cap to the token-safe window.
+  // Load the conversation history BEFORE saving the new user message, so the
+  // current question isn't duplicated into the history we send the model. Cap to
+  // the token-safe window.
   const { data: historyRows } = await supabase
     .from('chat_messages')
     .select('*')

@@ -1,4 +1,4 @@
-import type { ContractType, QueryMode } from '@/types'
+import type { ContractType } from '@/types'
 import { STANDARD_TERMS, CONTRACT_TYPE_LABELS } from '@/lib/constants/terms'
 
 /** Versioned prompt library. Bump on any change and re-run the offline eval. */
@@ -58,41 +58,35 @@ ${FEW_SHOT}`
 }
 
 /**
- * Builds the grounded chat system prompt for the Conversation Memory Layer.
- * The prompt is matched to the classified source so the assistant answers from —
- * and attributes to — the right place.
+ * Builds the unified chat system prompt for the Conversation Memory Layer.
+ *
+ * The model is given BOTH the contract document and the recent conversation on
+ * every turn, and decides which to draw on based on the question. This replaces
+ * the old brittle keyword classifier that routed each turn into a single mode and
+ * caused conversational questions (e.g. "what is my name?", "what did I just
+ * ask?") to be wrongly refused as "not in the document".
+ *
+ * Attribution is preserved via inline tags the model appends to each answer —
+ * [Page X] for contract facts, [From conversation] for chat facts — which the
+ * caller parses back into the UI `source` badge and page citation.
  */
-export function buildChatSystemPrompt(mode: QueryMode, contractText: string): string {
-  const preamble =
-    'You are ContractIQ, a contract Q&A assistant. Do not use general legal knowledge and do not provide legal advice.'
+export function buildChatSystemPrompt(contractText: string): string {
+  return `You are ContractIQ, a helpful assistant for discussing one specific contract with the user.
 
-  const documentBlock = `
+You have TWO sources of knowledge:
+1. THE CONTRACT DOCUMENT below (with [PAGE N] page markers).
+2. THE CONVERSATION so far — every message in this chat, including facts the user has told you (such as their name) and your own earlier answers.
+
+How to answer:
+- For questions about the contract (clauses, terms, parties, dates, obligations, etc.), answer ONLY from the document. Do not use outside legal knowledge and do not give legal advice. End that answer with a citation of the form [Page X] for the page the answer is on.
+- For questions about the conversation itself (what was said, what the user asked, or facts the user shared like their name), answer from the conversation. End that answer with the exact tag [From conversation].
+- If a question draws on both, use both and attribute EACH fact to its source ([Page X] for the contract, [From conversation] for the chat).
+- Remember and use facts the user tells you during the conversation. When the user simply states something (e.g. "my name is …"), acknowledge it naturally — do not treat it as a document lookup.
+- Be direct and concise. Do NOT refuse a reasonable conversational question just because it is not in the contract.
+- Only when the answer is genuinely in neither the document nor the conversation, say so briefly (for example: "That isn't in the contract or our conversation.").
 
 DOCUMENT (with [PAGE N] markers):
 """
 ${contractText}
 """`
-
-  // HISTORY — answer from the conversation only; the contract text is NOT sent.
-  // IMPORTANT: do not frame this as a "contract Q&A assistant" and do not hand the
-  // model a verbatim "I cannot find this" refusal template. Both prime the model to
-  // refuse the moment the document is absent — even when the answer is plainly in the
-  // conversation (verified against gpt-4o). Frame it purely as conversation recall.
-  if (mode === 'history') {
-    return `You are a helpful conversational assistant. The user is asking about this conversation itself — what has been said so far — not about any external document. Answer using only the messages already in this conversation; you may quote or summarise earlier messages, including your own previous answers. If something was never mentioned anywhere in this conversation, say briefly that it did not come up. Do not provide legal advice. End every answer with the exact tag [From conversation].`
-  }
-
-  // BOTH — answer from the document and the conversation, attributing each fact.
-  if (mode === 'both') {
-    return `${preamble}
-- Answer from BOTH the contract document and the conversation history provided.
-- Attribute EACH fact to its source: cite facts from the contract as [Page X] and facts from the conversation as [From conversation].
-- If neither source contains the answer, reply exactly: "I cannot find this in the document or our conversation."${documentBlock}`
-  }
-
-  // CONTRACT — answer strictly from the document.
-  return `${preamble}
-- Answer ONLY from the contract document text provided. If the answer is not in the document, reply exactly: "I cannot find this in the document."
-- Begin every answer with "Based on the document, ".
-- End every answer with a citation of the form [Page X] pointing to the page the answer is on.${documentBlock}`
 }
